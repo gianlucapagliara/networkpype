@@ -129,21 +129,19 @@ class AsyncRequestContext:
         if len(self._related_limits) > 0:
             now: float = self._time()
             for rate_limit, weight in self._related_limits:
+                # Calculate effective limit with safety margin
+                effective_limit = int(rate_limit.limit * (1 - self._safety_margin_pct))
                 capacity_used: int = sum(
                     [
                         task.weight
                         for task in self._task_logs
                         if rate_limit.limit_id == task.rate_limit.limit_id
-                        and Decimal(str(now))
-                        - Decimal(str(task.timestamp))
-                        - Decimal(
-                            str(task.rate_limit.time_interval * self._safety_margin_pct)
-                        )
+                        and Decimal(str(now)) - Decimal(str(task.timestamp))
                         <= task.rate_limit.time_interval
                     ]
                 )
 
-                if capacity_used + weight > rate_limit.limit:
+                if capacity_used + weight > effective_limit:
                     if (
                         self._last_max_cap_warning_ts
                         < now - self.MAX_CAPACITY_REACHED_WARNING_INTERVAL
@@ -178,14 +176,7 @@ class AsyncRequestContext:
             await asyncio.sleep(self._retry_interval)
         async with self._lock:
             now = time.time()
-            # Each related limit is represented as it own individual TaskLog
-            self._task_logs.append(
-                TaskLog(
-                    timestamp=now,
-                    rate_limit=self._rate_limit,
-                    weight=self._rate_limit.weight,
-                )
-            )
+            # Create task logs for each rate limit
             for limit, weight in self._related_limits:
                 task = TaskLog(timestamp=now, rate_limit=limit, weight=weight)
                 self._task_logs.append(task)

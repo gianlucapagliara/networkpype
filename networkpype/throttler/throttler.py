@@ -20,11 +20,10 @@ import asyncio
 import copy
 import logging
 import math
-from collections.abc import Sequence
 from decimal import Decimal
 
 from networkpype.throttler.context import AsyncRequestContext
-from networkpype.throttler.rate_limit import LinkedLimitWeightPair, RateLimit, TaskLog
+from networkpype.throttler.rate_limit import RateLimit, TaskLog
 
 
 class AsyncThrottler:
@@ -175,35 +174,41 @@ class AsyncThrottler:
     def get_related_limits(
         self, limit_id: str
     ) -> tuple[RateLimit | None, list[tuple[RateLimit, int]]]:
-        """Get a rate limit and its related limits.
+        """Get a rate limit and its related limits by ID.
 
-        This method retrieves the specified rate limit and any linked limits that
-        should be considered when executing a task.
+        This method retrieves a rate limit by its ID and returns it along with any
+        related limits. Related limits include the limit itself and any linked limits
+        that would be affected by requests against this limit.
 
         Args:
-            limit_id (str): The ID of the rate limit to look up.
+            limit_id (str): The ID of the rate limit to retrieve.
 
         Returns:
             tuple[RateLimit | None, list[tuple[RateLimit, int]]]: A tuple containing:
-                - The requested rate limit (or None if not found)
+                - The requested rate limit, or None if not found
                 - A list of tuples containing related limits and their weights
         """
-        rate_limit: RateLimit | None = self._id_to_limit_map.get(limit_id, None)
-        linked_limits: Sequence[LinkedLimitWeightPair] = (
-            [] if rate_limit is None else rate_limit.linked_limits
+        rate_limit = next(
+            (limit for limit in self._rate_limits if limit.limit_id == limit_id),
+            None,
         )
 
-        related_limits = [
-            (
-                self._id_to_limit_map[limit_weight_pair.limit_id],
-                limit_weight_pair.weight,
+        if rate_limit is None:
+            return None, []
+
+        # Get all related limits (including the limit itself)
+        related_limits = [(rate_limit, rate_limit.weight)]
+        for linked in rate_limit.linked_limits:
+            linked_limit = next(
+                (
+                    limit
+                    for limit in self._rate_limits
+                    if limit.limit_id == linked.limit_id
+                ),
+                None,
             )
-            for limit_weight_pair in linked_limits
-            if limit_weight_pair.limit_id in self._id_to_limit_map
-        ]
-        # Append self as part of the related_limits
-        if rate_limit is not None:
-            related_limits.append((rate_limit, rate_limit.weight))
+            if linked_limit is not None:
+                related_limits.append((linked_limit, linked.weight))
 
         return rate_limit, related_limits
 
@@ -223,15 +228,18 @@ class AsyncThrottler:
     def execute_task(self, limit_id: str) -> AsyncRequestContext:
         """Create a context manager for executing a rate-limited task.
 
-        This method returns an async context manager that will ensure the task
-        executes within the specified rate limits. If limits are reached, the
-        context manager will automatically wait until capacity is available.
+        This method creates an AsyncRequestContext that will ensure the task
+        execution stays within the specified rate limits. The context manager
+        handles waiting for available capacity and logging task execution.
 
         Args:
             limit_id (str): The ID of the rate limit to use.
 
         Returns:
-            AsyncRequestContext: An async context manager for executing the task.
+            AsyncRequestContext: A context manager for executing the task.
+
+        Raises:
+            ValueError: If the rate limit ID is not found.
 
         Example:
             ```python
@@ -239,12 +247,14 @@ class AsyncThrottler:
                 response = await make_api_call()
             ```
         """
-        rate_limit, related_rate_limits = self.get_related_limits(limit_id=limit_id)
+        rate_limit, related_limits = self.get_related_limits(limit_id)
+        if rate_limit is None:
+            raise ValueError(f"Rate limit not found for ID: {limit_id}")
 
         return AsyncRequestContext(
             task_logs=self._task_logs,
             rate_limit=rate_limit,
-            related_limits=related_rate_limits,
+            related_limits=related_limits,
             lock=self._lock,
             safety_margin_pct=self._safety_margin_pct,
             retry_interval=self._retry_interval,
