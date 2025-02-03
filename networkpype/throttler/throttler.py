@@ -233,9 +233,6 @@ class AsyncThrottler:
         Returns:
             AsyncRequestContext: An async context manager for executing the task.
 
-        Raises:
-            ValueError: If the specified rate limit ID is not found.
-
         Example:
             ```python
             async with throttler.execute_task("api_limit"):
@@ -243,8 +240,6 @@ class AsyncThrottler:
             ```
         """
         rate_limit, related_rate_limits = self.get_related_limits(limit_id=limit_id)
-        if rate_limit is None:
-            raise ValueError(f"Rate limit not found for ID: {limit_id}")
 
         return AsyncRequestContext(
             task_logs=self._task_logs,

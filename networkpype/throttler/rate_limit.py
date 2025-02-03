@@ -16,12 +16,12 @@ Classes:
     RateLimit: Defines an API endpoint's rate limit rules.
 """
 
+from dataclasses import dataclass, field
 from typing import Self
 
-from pydantic import BaseModel, Field
 
-
-class LinkedLimitWeightPair(BaseModel):
+@dataclass
+class LinkedLimitWeightPair:
     """Associates a weight with a linked rate limit.
 
     This class represents a connection between two rate limits, where an action that
@@ -51,16 +51,12 @@ class LinkedLimitWeightPair(BaseModel):
         ```
     """
 
-    limit_id: str = Field(
-        description="The rate limit id to be linked to the current rate limit",
-    )
-    weight: int = Field(
-        description="The weight of the linked rate limit",
-        ge=0,
-    )
+    limit_id: str
+    weight: int = 1
 
 
-class TaskLog(BaseModel):
+@dataclass
+class TaskLog:
     """Records the execution of a rate-limited task.
 
     This class maintains a record of when a rate-limited task was executed and how
@@ -84,18 +80,13 @@ class TaskLog(BaseModel):
         ```
     """
 
-    timestamp: float = Field(
-        description="The timestamp of the task execution",
-    )
-    rate_limit: "RateLimit" = Field(
-        description="The rate limit that was used to execute the task",
-    )
-    weight: int = Field(
-        description="The weight of the rate limit that was used to execute the task",
-    )
+    timestamp: float
+    rate_limit: "RateLimit"
+    weight: int = 1
 
 
-class RateLimit(BaseModel):
+@dataclass
+class RateLimit:
     """Defines rate limit rules for an API endpoint.
 
     This class represents a rate limit configuration that specifies how many requests
@@ -131,25 +122,11 @@ class RateLimit(BaseModel):
         ```
     """
 
-    limit_id: str = Field(
-        description="A unique identifier for this RateLimit object, this is usually an API request path url",
-    )
-    limit: int = Field(
-        description="A total number of calls * weight permitted within time_interval period",
-        ge=0,
-    )
-    time_interval: float = Field(
-        description="The time interval in seconds",
-        ge=0.0,
-    )
-    weight: int = Field(
-        description="The weight (in integer) of each call. Defaults to 1",
-        ge=0,
-    )
-    linked_limits: list[LinkedLimitWeightPair] = Field(
-        default_factory=list,
-        description="Optional list of LinkedLimitWeightPairs. Used to associate a weight to the linked rate limit.",
-    )
+    limit_id: str
+    limit: int
+    time_interval: float
+    weight: int = 1
+    linked_limits: list[LinkedLimitWeightPair] = field(default_factory=list)
 
     def __repr__(self) -> str:
         """Create a string representation of the rate limit.

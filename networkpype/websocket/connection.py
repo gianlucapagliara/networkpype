@@ -261,8 +261,7 @@ class WebSocketConnection:
             return None
 
         msg = await self._check_msg_types(msg)
-        if msg is not None:
-            self._update_last_recv_time(msg)
+        self._update_last_recv_time(msg)
         return msg
 
     async def _check_msg_types(

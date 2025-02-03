@@ -12,13 +12,15 @@ Classes:
 """
 
 from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Optional
 
 import aiohttp
 
 from networkpype.rest.method import RESTMethod
 
 
+@dataclass(init=False)
 class RESTResponse:
     """Wrapper class for HTTP responses.
 
@@ -41,6 +43,11 @@ class RESTResponse:
                 data = await rest_response.json()
         ```
     """
+
+    url: str
+    method: RESTMethod
+    status: int
+    headers: Optional[Mapping[str, str]]
 
     def __init__(self, aiohttp_response: aiohttp.ClientResponse):
         """Initialize the RESTResponse with an aiohttp response object.
