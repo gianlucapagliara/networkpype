@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "networkpype"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "NetworkPype is aPython library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization."
 authors = ["Gianluca Pagliara <pagliara.gianluca@gmail.com>"]
 readme = "README.md"
 
