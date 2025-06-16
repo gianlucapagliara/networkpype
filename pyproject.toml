@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "networkpype"
-version = "1.0.0"
-description = "NetworkPype is aPython library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization."
+version = "1.0.1"
+description = "NetworkPype is a Python library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization."
 authors = ["Gianluca Pagliara <pagliara.gianluca@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.13"
 numpy = "^2.2.2"
-aiohttp = "<3.10.0"
+aiohttp = "^3.10.0"
 aioresponses = "^0.7.8"
 
 
