@@ -1,0 +1,58 @@
+site_name: NetworkPype
+site_url: https://gianlucapagliara.github.io/networkpype/
+site_description: A Python library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization
+site_author: Gianluca Pagliara
+repo_url: https://github.com/gianlucapagliara/networkpype
+repo_name: gianlucapagliara/networkpype
+
+theme:
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - python
+    - bash
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - codehilite:
+      guess_lang: false
+  - def_list
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - REST: guide/rest.md
+      - WebSocket: guide/websocket.md
+      - Rate Limiting: guide/throttling.md
+      - Connection Factory: guide/factory.md
+      - Time Synchronization: guide/time-sync.md
+      - Authentication: guide/authentication.md
+  - API Reference:
+      - Factory:
+          - ConnectionManagersFactory: api/factory.md
+      - REST:
+          - RESTConnection: api/rest-connection.md
+          - RESTManager: api/rest-manager.md
+          - RESTRequest: api/rest-request.md
+          - RESTResponse: api/rest-response.md
+          - Processors: api/rest-processor.md
+      - WebSocket:
+          - WebSocketConnection: api/ws-connection.md
+          - WebSocketManager: api/ws-manager.md
+          - WebSocketRequest: api/ws-request.md
+      - Throttler:
+          - AsyncThrottler: api/throttler.md
+          - RateLimit: api/rate-limit.md
+      - Utilities:
+          - TimeSynchronizer: api/time-synchronizer.md
+  - Development:
+      - Contributing: development/contributing.md
