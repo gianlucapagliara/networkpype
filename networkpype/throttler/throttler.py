@@ -137,7 +137,9 @@ class AsyncThrottler:
         # If configured, users can define the percentage of rate limits to allocate to the throttler.
         self.limits_pct: Decimal = self.limits_share_percentage / 100
         for rate_limit in self._rate_limits:
-            floor_val: int = math.floor(Decimal(str(rate_limit.limit)) * self.limits_pct)
+            floor_val: int = math.floor(
+                Decimal(str(rate_limit.limit)) * self.limits_pct
+            )
             adjusted_limit: Decimal = max(Decimal("1"), Decimal(floor_val))
             rate_limit.limit = int(adjusted_limit)
 
