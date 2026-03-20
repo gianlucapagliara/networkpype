@@ -72,7 +72,7 @@ class WebSocketConnection:
         self._connection: aiohttp.ClientWebSocketResponse | None = None
         self._connected = False
         self._message_timeout: float | None = None
-        self._last_recv_time = 0
+        self._last_recv_time: float = 0.0
 
     @classmethod
     def logger(cls) -> logging.Logger:
@@ -109,9 +109,9 @@ class WebSocketConnection:
         ping_timeout: float = 10,
         auto_ping: bool = False,
         message_timeout: float | None = None,
-        ws_headers: dict | None = None,
+        ws_headers: dict[str, Any] | None = None,
         verify_ssl: bool = True,
-    ):
+    ) -> None:
         """Establish a WebSocket connection.
 
         Args:
@@ -141,7 +141,7 @@ class WebSocketConnection:
         self._message_timeout = message_timeout
         self._connected = True
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Close the WebSocket connection.
 
         This method will cleanly close the connection if it's open. It is safe to
@@ -152,7 +152,7 @@ class WebSocketConnection:
         self._connection = None
         self._connected = False
 
-    async def send(self, request: WebSocketRequest):
+    async def send(self, request: WebSocketRequest) -> None:
         """Send a WebSocket message.
 
         Args:
@@ -165,7 +165,7 @@ class WebSocketConnection:
         self._ensure_connected()
         await request.send_with_connection(connection=self)
 
-    async def ping(self):
+    async def ping(self) -> None:
         """Send a WebSocket ping message.
 
         Raises:
@@ -206,7 +206,7 @@ class WebSocketConnection:
                     break
         return response
 
-    def _ensure_not_connected(self):
+    def _ensure_not_connected(self) -> None:
         """Check that the connection is not already established.
 
         Raises:
@@ -215,7 +215,7 @@ class WebSocketConnection:
         if self._connected:
             raise RuntimeError("WebSocket is connected.")
 
-    def _ensure_connected(self):
+    def _ensure_connected(self) -> None:
         """Check that the connection is established.
 
         Raises:
@@ -240,8 +240,8 @@ class WebSocketConnection:
         try:
             msg = await self._connection.receive(self._message_timeout)
             return msg
-        except TimeoutError:
-            raise TimeoutError("Message receive timed out.")
+        except TimeoutError as err:
+            raise TimeoutError("Message receive timed out.") from err
 
     async def _process_message(
         self, msg: aiohttp.WSMessage | None
@@ -261,7 +261,8 @@ class WebSocketConnection:
             return None
 
         msg = await self._check_msg_types(msg)
-        self._update_last_recv_time(msg)
+        if msg is not None:
+            self._update_last_recv_time(msg)
         return msg
 
     async def _check_msg_types(
@@ -342,7 +343,7 @@ class WebSocketConnection:
             return None
         return msg
 
-    def _update_last_recv_time(self, _: aiohttp.WSMessage):
+    def _update_last_recv_time(self, _: aiohttp.WSMessage) -> None:
         """Update the timestamp of the last received message.
 
         Args:
@@ -350,7 +351,7 @@ class WebSocketConnection:
         """
         self._last_recv_time = time.time()
 
-    async def _send_json(self, payload: Mapping[str, Any]):
+    async def _send_json(self, payload: Mapping[str, Any]) -> None:
         """Send a JSON message over the WebSocket connection.
 
         Args:
@@ -364,7 +365,7 @@ class WebSocketConnection:
             raise RuntimeError("WebSocket connection is not initialized")
         await self._connection.send_json(payload)
 
-    async def _send_plain_text(self, payload: str):
+    async def _send_plain_text(self, payload: str) -> None:
         """Send a text message over the WebSocket connection.
 
         Args:

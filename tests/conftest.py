@@ -30,7 +30,7 @@ def event_loop():
 
 
 @pytest_asyncio.fixture
-async def client_session() -> AsyncGenerator[ClientSession, None]:
+async def client_session() -> AsyncGenerator[ClientSession]:
     """Create an aiohttp ClientSession for testing."""
     session = ClientSession()
     try:
@@ -41,7 +41,7 @@ async def client_session() -> AsyncGenerator[ClientSession, None]:
 
 
 @pytest.fixture
-def mock_aioresponse() -> Generator[aioresponses, None, None]:
+def mock_aioresponse() -> Generator[aioresponses]:
     """Create a mock aiohttp response."""
     with aioresponses() as m:
         yield m
@@ -62,7 +62,7 @@ def api_key() -> str:
 @pytest_asyncio.fixture
 async def connection(
     client_session: ClientSession,
-) -> AsyncGenerator[RESTConnection, None]:
+) -> AsyncGenerator[RESTConnection]:
     """Create a REST connection for testing."""
     connection = RESTConnection(client_session)
     yield connection
@@ -71,7 +71,7 @@ async def connection(
 @pytest_asyncio.fixture
 async def ws_connection(
     client_session: ClientSession,
-) -> AsyncGenerator[WebSocketConnection, None]:
+) -> AsyncGenerator[WebSocketConnection]:
     """Create a WebSocket connection for testing."""
     connection = WebSocketConnection(client_session)
     try:

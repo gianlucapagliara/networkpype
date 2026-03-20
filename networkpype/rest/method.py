@@ -7,9 +7,9 @@ class RESTMethod(Enum):
     PUT = "PUT"
     DELETE = "DELETE"
 
-    def __str__(self):
+    def __str__(self) -> str:
         obj_str = repr(self)
         return obj_str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value

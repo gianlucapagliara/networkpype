@@ -45,7 +45,7 @@ class WebSocketRequest(ABC):
     is_auth_required: bool = False
 
     @abstractmethod
-    async def send_with_connection(self, connection: "WebSocketConnection"):
+    async def send_with_connection(self, connection: "WebSocketConnection") -> None:
         """Send the request through a WebSocket connection.
 
         This abstract method must be implemented by concrete subclasses to define
@@ -54,11 +54,8 @@ class WebSocketRequest(ABC):
         Args:
             connection (WebSocketConnection): The WebSocket connection to use for sending
                 the message.
-
-        Returns:
-            NotImplemented: This is an abstract method.
         """
-        return NotImplemented
+        ...
 
 
 @dataclass
@@ -90,7 +87,7 @@ class WebSocketJSONRequest(WebSocketRequest):
     throttler_limit_id: str | None = None
     is_auth_required: bool = False
 
-    async def send_with_connection(self, connection: "WebSocketConnection"):
+    async def send_with_connection(self, connection: "WebSocketConnection") -> None:
         """Send the JSON message through a WebSocket connection.
 
         Args:
@@ -128,7 +125,7 @@ class WebSocketPlainTextRequest(WebSocketRequest):
     throttler_limit_id: str | None = None
     is_auth_required: bool = False
 
-    async def send_with_connection(self, connection: "WebSocketConnection"):
+    async def send_with_connection(self, connection: "WebSocketConnection") -> None:
         """Send the text message through a WebSocket connection.
 
         Args:

@@ -9,6 +9,8 @@ Classes:
     ConnectionManagersFactory: Creates and manages high-level connection managers with additional features.
 """
 
+from typing import Any
+
 import aiohttp
 
 from networkpype.auth import Auth
@@ -36,7 +38,7 @@ class ConnectionsFactory:
         _shared_client (aiohttp.ClientSession | None): Shared HTTP client session for all connections.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ConnectionsFactory with no active client session."""
         self._shared_client: aiohttp.ClientSession | None = None
 
@@ -50,7 +52,7 @@ class ConnectionsFactory:
         connection = RESTConnection(aiohttp_client_session=shared_client)
         return connection
 
-    async def get_ws_connection(self, **kwargs) -> WebSocketConnection:
+    async def get_ws_connection(self, **kwargs: Any) -> WebSocketConnection:
         """Create or retrieve a WebSocket connection using the shared client session.
 
         Args:
@@ -63,7 +65,7 @@ class ConnectionsFactory:
         connection = WebSocketConnection(aiohttp_client_session=shared_client)
         return connection
 
-    async def _get_shared_client(self, **kwargs) -> aiohttp.ClientSession:
+    async def _get_shared_client(self, **kwargs: Any) -> aiohttp.ClientSession:
         """Get or create a shared aiohttp client session.
 
         Args:
@@ -75,7 +77,7 @@ class ConnectionsFactory:
         self._shared_client = self._shared_client or aiohttp.ClientSession(**kwargs)
         return self._shared_client
 
-    async def update_cookies(self, cookies):
+    async def update_cookies(self, cookies: Any) -> None:
         """Update the cookies in the shared client session.
 
         Args:
@@ -84,7 +86,7 @@ class ConnectionsFactory:
         shared_client = await self._get_shared_client()
         shared_client.cookie_jar.update_cookies(cookies)
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the shared client session and clean up resources."""
         if self._shared_client:
             await self._shared_client.close()
@@ -118,7 +120,7 @@ class ConnectionManagersFactory:
         ws_pre_processors: list[WebSocketPreProcessor] | None = None,
         ws_post_processors: list[WebSocketPostProcessor] | None = None,
         time_synchronizer: TimeSynchronizer | None = None,
-    ):
+    ) -> None:
         """Initialize the ConnectionManagersFactory with the specified components.
 
         Args:
@@ -135,7 +137,7 @@ class ConnectionManagersFactory:
             time_synchronizer (TimeSynchronizer | None): Component for handling time synchronization.
                 Defaults to None.
         """
-        self._connections_factory = ConnectionsFactory()
+        self._connections_factory: ConnectionsFactory = ConnectionsFactory()
         self._rest_pre_processors = rest_pre_processors or []
         self._rest_post_processors = rest_post_processors or []
         self._ws_pre_processors = ws_pre_processors or []
@@ -188,7 +190,7 @@ class ConnectionManagersFactory:
         )
         return assistant
 
-    async def get_ws_manager(self, **kwargs) -> WebSocketManager:
+    async def get_ws_manager(self, **kwargs: Any) -> WebSocketManager:
         """Create a new WebSocket connection manager with all configured components.
 
         Args:
@@ -204,7 +206,7 @@ class ConnectionManagersFactory:
         )
         return assistant
 
-    async def update_cookies(self, cookies):
+    async def update_cookies(self, cookies: Any) -> None:
         """Update the cookies in the shared client session.
 
         Args:
@@ -212,6 +214,6 @@ class ConnectionManagersFactory:
         """
         await self._connections_factory.update_cookies(cookies)
 
-    async def close(self):
+    async def close(self) -> None:
         """Close all connections and clean up resources."""
         await self._connections_factory.close()

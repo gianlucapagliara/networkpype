@@ -13,7 +13,7 @@ from networkpype.rest.request import RESTRequest
 
 
 @pytest_asyncio.fixture
-async def client_session() -> AsyncGenerator[ClientSession, None]:
+async def client_session() -> AsyncGenerator[ClientSession]:
     """Create a client session for testing."""
     async with ClientSession() as session:
         yield session
@@ -22,7 +22,7 @@ async def client_session() -> AsyncGenerator[ClientSession, None]:
 @pytest_asyncio.fixture
 async def connection(
     client_session: ClientSession,
-) -> AsyncGenerator[RESTConnection, None]:
+) -> AsyncGenerator[RESTConnection]:
     """Create a REST connection for testing."""
     connection = RESTConnection(client_session)
     yield connection

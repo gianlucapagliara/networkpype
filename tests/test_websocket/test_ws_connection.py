@@ -17,7 +17,7 @@ from networkpype.websocket.request import (
 
 
 @pytest_asyncio.fixture
-async def client_session() -> AsyncGenerator[ClientSession, None]:
+async def client_session() -> AsyncGenerator[ClientSession]:
     """Fixture providing an aiohttp client session."""
     session = ClientSession()
     try:
@@ -54,7 +54,7 @@ def mock_ws_response() -> Mock:
 @pytest_asyncio.fixture
 async def ws_connection_with_mock(
     client_session: ClientSession, mock_ws_response: Mock
-) -> AsyncGenerator[WebSocketConnection, None]:
+) -> AsyncGenerator[WebSocketConnection]:
     """Create a WebSocket connection with a mock response."""
     connection = WebSocketConnection(client_session)
     patcher = patch.object(

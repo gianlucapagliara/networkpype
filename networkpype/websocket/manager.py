@@ -14,6 +14,7 @@ Classes:
 
 from collections.abc import AsyncGenerator
 from copy import deepcopy
+from typing import Any
 
 from networkpype.auth import Auth
 from networkpype.websocket.connection import WebSocketConnection
@@ -104,9 +105,9 @@ class WebSocketManager:
         ping_timeout: float = 10,
         auto_ping: bool = False,
         message_timeout: float | None = None,
-        ws_headers: dict | None = None,
+        ws_headers: dict[str, Any] | None = None,
         verify_ssl: bool = True,
-    ):
+    ) -> None:
         """Establish a WebSocket connection.
 
         Args:
@@ -134,7 +135,7 @@ class WebSocketManager:
             verify_ssl=verify_ssl,
         )
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Close the WebSocket connection.
 
         This method will cleanly close the connection and clean up any resources.
@@ -142,7 +143,7 @@ class WebSocketManager:
         """
         await self._connection.disconnect()
 
-    async def subscribe(self, request: WebSocketRequest):
+    async def subscribe(self, request: WebSocketRequest) -> None:
         """Subscribe to a WebSocket stream.
 
         This method is a wrapper around send() that will eventually support automatic
@@ -153,7 +154,7 @@ class WebSocketManager:
         """
         await self.send(request)
 
-    async def send(self, request: WebSocketRequest):
+    async def send(self, request: WebSocketRequest) -> None:
         """Send a WebSocket message.
 
         This method handles the message sending pipeline:
@@ -172,7 +173,7 @@ class WebSocketManager:
         request = await self._authenticate(request)
         await self._connection.send(request)
 
-    async def ping(self):
+    async def ping(self) -> None:
         """Send a WebSocket ping message.
 
         This method can be used to check the connection health or keep it alive.
@@ -183,7 +184,7 @@ class WebSocketManager:
         """
         await self._connection.ping()
 
-    async def iter_messages(self) -> AsyncGenerator[WebSocketResponse | None, None]:
+    async def iter_messages(self) -> AsyncGenerator[WebSocketResponse | None]:
         """Iterate over incoming WebSocket messages.
 
         This method provides an async iterator for processing incoming messages.

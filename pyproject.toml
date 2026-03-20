@@ -1,44 +1,33 @@
-[tool.poetry]
+[project]
 name = "networkpype"
 version = "1.0.1"
 description = "NetworkPype is a Python library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization."
-authors = ["Gianluca Pagliara <pagliara.gianluca@gmail.com>"]
+authors = [{ name = "Gianluca Pagliara", email = "pagliara.gianluca@gmail.com" }]
 readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.2.2",
+    "aiohttp>=3.10.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-numpy = "^2.2.2"
-aiohttp = "^3.10.0"
-aioresponses = "^0.7.8"
-
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
-pytest-cov = "^4.1.0"
-black = "^23.11.0"
-isort = "^5.12.0"
-mypy = "^1.7.0"
-safety = "^2.3.5"
-pre-commit = "^3.5.0"
-ruff = "^0.8.4"
-pytest-asyncio = "<0.25.0"
-sphinx = "^8.1.3"
-sphinx-rtd-theme = "^3.0.2"
-sphinx-autodoc-typehints = "^3.0.0"
+[dependency-groups]
+dev = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio<0.25.0",
+    "mypy>=1.7.0",
+    "ruff>=0.8.4",
+    "pre-commit>=3.5.0",
+    "aioresponses>=0.7.8",
+    "sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.2",
+    "sphinx-autodoc-typehints>=3.0.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 88
-target-version = ['py312']
-include = '\.pyi?$'
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.mypy]
 python_version = "3.13"
@@ -54,7 +43,7 @@ exclude = ["tests/.*"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
@@ -64,12 +53,14 @@ select = [
     "I",   # isort
     "C",   # flake8-comprehensions
     "B",   # flake8-bugbear
-    "UP"   # pyupgrade
+    "UP",  # pyupgrade
 ]
 ignore = [
-    "E203",  # See https://github.com/psf/black/issues/315
-    "E501"   # Line too long (handled by black)
+    "E501",  # Line too long (handled by formatter)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # Ignore unused imports in __init__ files
+"__init__.py" = ["F401"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

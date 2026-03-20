@@ -121,31 +121,8 @@ class AsyncThrottler:
         """
         return self._rate_limits
 
-    @property
-    def limits_share_percentage(self) -> Decimal:
-        """Get the percentage of rate limits allocated to this throttler.
-
-        Returns:
-            Decimal: The percentage as a decimal (e.g., 100 for 100%).
-        """
-        return (
-            self._limits_share_percentage
-            if self._limits_share_percentage is not None
-            else Decimal("100")
-        )
-
-    @limits_share_percentage.setter
-    def limits_share_percentage(self, limits_share_percentage: Decimal | None):
-        """Set the percentage of rate limits allocated to this throttler.
-
-        Args:
-            limits_share_percentage (Decimal | None): The percentage to allocate,
-                or None to use 100%.
-        """
-        self._limits_share_percentage = limits_share_percentage
-
     @rate_limits.setter
-    def rate_limits(self, rate_limits: list[RateLimit]):
+    def rate_limits(self, rate_limits: list[RateLimit]) -> None:
         """Set the rate limits to enforce.
 
         This method also updates the internal limit mapping and applies the
@@ -160,16 +137,37 @@ class AsyncThrottler:
         # If configured, users can define the percentage of rate limits to allocate to the throttler.
         self.limits_pct: Decimal = self.limits_share_percentage / 100
         for rate_limit in self._rate_limits:
-            adjusted_limit = max(
-                Decimal("1"),
-                math.floor(Decimal(str(rate_limit.limit)) * self.limits_pct),
-            )
+            floor_val: int = math.floor(Decimal(str(rate_limit.limit)) * self.limits_pct)
+            adjusted_limit: Decimal = max(Decimal("1"), Decimal(floor_val))
             rate_limit.limit = int(adjusted_limit)
 
         # Dictionary of path_url to RateLimit
         self._id_to_limit_map: dict[str, RateLimit] = {
             limit.limit_id: limit for limit in self._rate_limits
         }
+
+    @property
+    def limits_share_percentage(self) -> Decimal:
+        """Get the percentage of rate limits allocated to this throttler.
+
+        Returns:
+            Decimal: The percentage as a decimal (e.g., 100 for 100%).
+        """
+        return (
+            self._limits_share_percentage
+            if self._limits_share_percentage is not None
+            else Decimal("100")
+        )
+
+    @limits_share_percentage.setter
+    def limits_share_percentage(self, limits_share_percentage: Decimal | None) -> None:
+        """Set the percentage of rate limits allocated to this throttler.
+
+        Args:
+            limits_share_percentage (Decimal | None): The percentage to allocate,
+                or None to use 100%.
+        """
+        self._limits_share_percentage = limits_share_percentage
 
     def get_related_limits(
         self, limit_id: str

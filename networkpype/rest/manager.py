@@ -102,7 +102,7 @@ class RESTManager:
         return_err: bool = False,
         timeout: float | None = None,
         headers: dict[str, Any] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute a REST request with full processing and error handling.
 
@@ -175,7 +175,7 @@ class RESTManager:
                 if return_err:
                     try:
                         error_response = await response.json()
-                    except:
+                    except Exception:
                         error_response = await response.json(content_type=None)
                     return cast(dict[str, Any], error_response)
                 else:
@@ -196,7 +196,7 @@ class RESTManager:
             return cast(dict[str, Any], result)
 
     async def call(
-        self, request: RESTRequest, timeout: float | None = None, **kwargs
+        self, request: RESTRequest, timeout: float | None = None, **kwargs: Any
     ) -> RESTResponse:
         """Execute a REST request with pre/post processing.
 

@@ -99,7 +99,7 @@ class AsyncRequestContext:
         self._safety_margin_pct: float = safety_margin_pct
         self._retry_interval: float = retry_interval
 
-    def flush(self):
+    def flush(self) -> None:
         """Remove expired task logs.
 
         This method removes task logs that are older than their rate limit's
@@ -157,7 +157,7 @@ class AsyncRequestContext:
                     return False
         return True
 
-    async def acquire(self):
+    async def acquire(self) -> None:
         """Acquire capacity to execute a task.
 
         This method repeatedly checks for available capacity across all rate
@@ -181,7 +181,7 @@ class AsyncRequestContext:
                 task = TaskLog(timestamp=now, rate_limit=limit, weight=weight)
                 self._task_logs.append(task)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         """Enter the async context manager.
 
         This method is called when entering an 'async with' block. It acquires
@@ -189,7 +189,7 @@ class AsyncRequestContext:
         """
         await self.acquire()
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
         """Exit the async context manager.
 
         This method is called when exiting an 'async with' block. Currently,
@@ -202,7 +202,7 @@ class AsyncRequestContext:
         """
         pass
 
-    def _time(self):
+    def _time(self) -> float:
         """Get the current time.
 
         This method exists primarily to facilitate testing by allowing

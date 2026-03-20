@@ -12,6 +12,8 @@ Classes:
     RESTConnection: Low-level HTTP connection handler.
 """
 
+from typing import Any
+
 import aiohttp
 from yarl import URL
 
@@ -55,7 +57,7 @@ class RESTConnection:
         self._client_session = aiohttp_client_session
 
     async def call(
-        self, request: RESTRequest, encoded: bool = False, **kwargs
+        self, request: RESTRequest, encoded: bool = False, **kwargs: Any
     ) -> RESTResponse:
         """Execute an HTTP request.
 

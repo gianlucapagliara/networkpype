@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import Any
 
 from networkpype.rest.processor.base import RESTPreProcessor
 from networkpype.rest.request import RESTRequest
@@ -11,7 +12,7 @@ class TimeSynchronizerRESTPreProcessor(RESTPreProcessor):
     to accept API requests. It ensures the synchronizer has at least one server time sample before being used.
     """
 
-    def __init__(self, synchronizer: TimeSynchronizer, time_provider: Callable):
+    def __init__(self, synchronizer: TimeSynchronizer, time_provider: Callable[..., Any]) -> None:
         super().__init__()
         self._synchronizer = synchronizer
         self._time_provider = time_provider

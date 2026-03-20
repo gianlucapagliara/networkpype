@@ -89,7 +89,7 @@ class TimeSynchronizer:
 
         return offset
 
-    def add_time_offset_ms_sample(self, offset: float):
+    def add_time_offset_ms_sample(self, offset: float) -> None:
         """Add a new time offset sample to the rolling window.
 
         Args:
@@ -97,7 +97,7 @@ class TimeSynchronizer:
         """
         self._time_offset_ms.append(offset)
 
-    def clear_time_offset_ms_samples(self):
+    def clear_time_offset_ms_samples(self) -> None:
         """Clear all stored time offset samples."""
         self._time_offset_ms.clear()
 
@@ -111,7 +111,7 @@ class TimeSynchronizer:
 
     async def update_server_time_offset_with_time_provider(
         self, time_provider: Awaitable[float]
-    ):
+    ) -> None:
         """Update the time offset using a server time provider.
 
         This method calculates and stores a new time offset sample by comparing
@@ -142,7 +142,7 @@ class TimeSynchronizer:
 
     async def update_server_time_if_not_initialized(
         self, time_provider: Awaitable[float]
-    ):
+    ) -> None:
         """Update the time offset only if no samples exist.
 
         This method updates the time offset only if there are no existing samples,
