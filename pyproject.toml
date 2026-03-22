@@ -19,12 +19,13 @@ Issues = "https://github.com/gianlucapagliara/networkpype/issues"
 
 [dependency-groups]
 dev = [
-    "pytest>=7.4.3",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio<0.25.0",
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-asyncio>=0.25",
+    "pytest-timeout>=2.3",
     "mypy>=1.7.0",
     "ruff>=0.8.4",
-    "pre-commit>=3.5.0",
+    "pre-commit>=4.0",
     "aioresponses>=0.7.8",
 ]
 docs = [
@@ -70,3 +71,5 @@ ignore = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+timeout = 30
+testpaths = ["tests"]
