@@ -129,8 +129,12 @@ class AsyncRequestContext:
         if len(self._related_limits) > 0:
             now: float = self._time()
             for rate_limit, weight in self._related_limits:
-                # Calculate effective limit with safety margin
+                # Calculate effective limit with safety margin, ensuring it
+                # never drops below 1 for positive limits (prevents blocking
+                # all requests when limit=1 and safety_margin_pct > 0).
                 effective_limit = int(rate_limit.limit * (1 - self._safety_margin_pct))
+                if rate_limit.limit > 0:
+                    effective_limit = max(1, effective_limit)
                 capacity_used: int = sum(
                     [
                         task.weight
