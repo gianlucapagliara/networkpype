@@ -162,16 +162,78 @@ async def test_update_server_time_if_not_initialized_already_initialized():
 
 
 @pytest.mark.asyncio
-async def test_update_server_time_if_not_initialized_cancels_task():
-    """Test that an asyncio.Task is cancelled if already initialized."""
+async def test_update_server_time_if_not_initialized_closes_coroutine():
+    """Test that an unused coroutine is closed when already initialized."""
     ts = TimeSynchronizer()
     ts.add_time_offset_ms_sample(500.0)
 
+    called = False
+
     async def get_server_time():
+        nonlocal called
+        called = True
         return 1000.0
 
-    task = asyncio.create_task(get_server_time())
-    await ts.update_server_time_if_not_initialized(task)
-    # Allow the event loop to process the cancellation
-    await asyncio.sleep(0)
-    assert task.cancelled() or task.done()
+    await ts.update_server_time_if_not_initialized(get_server_time())
+    assert not called
+    assert len(ts._time_offset_ms) == 1
+    assert ts._time_offset_ms[0] == 500.0
+
+
+@pytest.mark.asyncio
+async def test_update_server_time_if_not_initialized_lock_prevents_concurrent():
+    """Test that the lock prevents concurrent callers from all triggering the provider."""
+    ts = TimeSynchronizer()
+    call_count = 0
+
+    async def get_server_time():
+        nonlocal call_count
+        call_count += 1
+        await asyncio.sleep(0.05)  # Simulate network delay
+        return ts._current_seconds_counter() * 1e3 + 100.0
+
+    # Launch multiple concurrent calls
+    await asyncio.gather(
+        ts.update_server_time_if_not_initialized(get_server_time()),
+        ts.update_server_time_if_not_initialized(get_server_time()),
+        ts.update_server_time_if_not_initialized(get_server_time()),
+    )
+
+    # Only one should have actually called the provider
+    assert call_count == 1
+    assert len(ts._time_offset_ms) == 1
+
+
+@pytest.mark.asyncio
+async def test_update_server_time_if_not_initialized_cleanup_on_cancellation():
+    """Test that coroutine is cleaned up if cancelled while waiting for lock."""
+    ts = TimeSynchronizer()
+
+    async def slow_provider():
+        await asyncio.sleep(10)
+        return 1000.0
+
+    async def get_server_time():
+        return ts._current_seconds_counter() * 1e3 + 100.0
+
+    # Start a first call that holds the lock for a while
+    task1 = asyncio.create_task(
+        ts.update_server_time_if_not_initialized(slow_provider())
+    )
+    await asyncio.sleep(0)  # Let task1 acquire the lock
+
+    # Start a second call that will wait on the lock
+    task2 = asyncio.create_task(
+        ts.update_server_time_if_not_initialized(get_server_time())
+    )
+    await asyncio.sleep(0)  # Let task2 start waiting
+
+    # Cancel task2 while it's waiting for the lock
+    task2.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task2
+
+    # Clean up task1
+    task1.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task1

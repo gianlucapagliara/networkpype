@@ -117,6 +117,64 @@ async def test_context_cleanup(rate_limit: RateLimit, task_logs: list[TaskLog]):
         assert len(current_logs) == len(context._related_limits)
 
 
+@pytest.mark.asyncio
+async def test_context_limit_one_no_concurrent_breach():
+    """Test that limit=1 does not allow concurrent tasks to both pass capacity check."""
+    rate_limit = RateLimit(limit_id="strict", limit=1, time_interval=0.5)
+    task_logs: list[TaskLog] = []
+    lock = asyncio.Lock()
+
+    concurrent_count = 0
+    max_concurrent = 0
+
+    async def guarded_task():
+        nonlocal concurrent_count, max_concurrent
+        context = AsyncRequestContext(
+            task_logs=task_logs,
+            rate_limit=rate_limit,
+            related_limits=[(rate_limit, 1)],
+            retry_interval=0.05,
+            safety_margin_pct=0.05,
+            lock=lock,
+        )
+        async with context:
+            concurrent_count += 1
+            max_concurrent = max(max_concurrent, concurrent_count)
+            await asyncio.sleep(0.05)
+            concurrent_count -= 1
+
+    # Launch several concurrent tasks against limit=1
+    tasks = [asyncio.create_task(guarded_task()) for _ in range(5)]
+    await asyncio.gather(*tasks)
+
+    # Only one task should ever be inside the context at a time
+    assert max_concurrent == 1
+
+
+@pytest.mark.asyncio
+async def test_context_limit_one_with_safety_margin():
+    """Test that limit=1 with safety margin still allows requests (max(1, ...) floor)."""
+    rate_limit = RateLimit(limit_id="single", limit=1, time_interval=0.5)
+    task_logs: list[TaskLog] = []
+    lock = asyncio.Lock()
+
+    context = AsyncRequestContext(
+        task_logs=task_logs,
+        rate_limit=rate_limit,
+        related_limits=[(rate_limit, 1)],
+        retry_interval=0.05,
+        safety_margin_pct=0.5,  # 50% margin — would make effective_limit=0 without floor
+        lock=lock,
+    )
+
+    # Should complete without hanging — the max(1, ...) floor ensures progress
+    async with asyncio.timeout(2.0):
+        async with context:
+            pass
+
+    assert len(task_logs) == 1
+
+
 async def execute_context_task(context: AsyncRequestContext):
     """Helper function to execute a task within the context."""
     async with context:

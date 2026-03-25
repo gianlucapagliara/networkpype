@@ -12,6 +12,7 @@ Classes:
 """
 
 import asyncio
+import inspect
 import logging
 import time
 from collections import deque
@@ -52,6 +53,7 @@ class TimeSynchronizer:
                 Defaults to 5.
         """
         self._time_offset_ms: deque[float] = deque(maxlen=max_samples)
+        self._init_lock: asyncio.Lock = asyncio.Lock()
 
     @classmethod
     def logger(cls) -> logging.Logger:
@@ -148,16 +150,32 @@ class TimeSynchronizer:
         This method updates the time offset only if there are no existing samples,
         preventing unnecessary updates when synchronization is already established.
 
+        Uses a lock to prevent a race where many concurrent requests each trigger
+        the time provider before the first completes, which can exhaust rate limits.
+
         Args:
             time_provider (Awaitable[float]): An awaitable that resolves to the server's
                 current time in milliseconds.
         """
-        if not self._time_offset_ms:
-            await self.update_server_time_offset_with_time_provider(time_provider)
-        else:
-            # Since we're not using the time_provider, we need to properly clean it up
-            if isinstance(time_provider, asyncio.Task):
-                time_provider.cancel()
+        awaited = False
+        try:
+            async with self._init_lock:
+                if not self._time_offset_ms:
+                    await self.update_server_time_offset_with_time_provider(
+                        time_provider
+                    )
+                    awaited = True
+                else:
+                    if inspect.iscoroutine(time_provider):
+                        time_provider.close()
+        finally:
+            # If cancelled before awaiting (e.g. while waiting for lock), clean up
+            # to avoid "coroutine was never awaited"
+            if not awaited and inspect.iscoroutine(time_provider):
+                try:
+                    time_provider.close()
+                except RuntimeError:
+                    pass  # Already closed or consumed
 
     def _current_seconds_counter(self) -> float:
         """Get the current monotonic time in seconds.

@@ -166,7 +166,9 @@ class AsyncRequestContext:
 
         This method repeatedly checks for available capacity across all rate
         limits until capacity is available. When capacity is found, it logs
-        the task execution in the task history.
+        the task execution in the task history atomically under the same lock
+        to prevent race conditions where multiple coroutines could both pass
+        the capacity check before either logs its task.
 
         The method is thread-safe and handles the creation of task logs for
         both the primary rate limit and all related limits.
@@ -176,14 +178,12 @@ class AsyncRequestContext:
                 self.flush()
 
                 if self.within_capacity():
+                    now = time.time()
+                    for limit, weight in self._related_limits:
+                        task = TaskLog(timestamp=now, rate_limit=limit, weight=weight)
+                        self._task_logs.append(task)
                     break
             await asyncio.sleep(self._retry_interval)
-        async with self._lock:
-            now = time.time()
-            # Create task logs for each rate limit
-            for limit, weight in self._related_limits:
-                task = TaskLog(timestamp=now, rate_limit=limit, weight=weight)
-                self._task_logs.append(task)
 
     async def __aenter__(self) -> None:
         """Enter the async context manager.
