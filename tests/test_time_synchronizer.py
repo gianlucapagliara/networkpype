@@ -237,3 +237,21 @@ async def test_update_server_time_if_not_initialized_cleanup_on_cancellation():
     task1.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task1
+
+
+@pytest.mark.asyncio
+async def test_update_server_time_if_not_initialized_cleanup_runtime_error():
+    """Test that RuntimeError from .close() in the finally block is suppressed."""
+    from unittest.mock import MagicMock, patch
+
+    ts = TimeSynchronizer()
+    ts.add_time_offset_ms_sample(500.0)
+
+    # Create a fake coroutine-like object whose .close() raises RuntimeError
+    # on the second call (first call succeeds in the lock block, second in finally)
+    fake_coro = MagicMock()
+    fake_coro.close.side_effect = [None, RuntimeError("already closed")]
+
+    with patch("networkpype.time_synchronizer.inspect.iscoroutine", return_value=True):
+        # Should not raise — the RuntimeError in finally is caught
+        await ts.update_server_time_if_not_initialized(fake_coro)
