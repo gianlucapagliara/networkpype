@@ -111,13 +111,14 @@ async def test_update_server_time_offset_with_time_provider():
 
 @pytest.mark.asyncio
 async def test_update_server_time_offset_error_handling():
-    """Test that errors from the time provider are handled gracefully."""
+    """Test that errors from the time provider are re-raised after logging."""
     ts = TimeSynchronizer()
 
     async def failing_provider():
         raise ValueError("Server error")
 
-    await ts.update_server_time_offset_with_time_provider(failing_provider())
+    with pytest.raises(ValueError, match="Server error"):
+        await ts.update_server_time_offset_with_time_provider(failing_provider())
     # Should not add any sample on error
     assert len(ts._time_offset_ms) == 0
 

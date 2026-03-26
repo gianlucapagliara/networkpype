@@ -141,6 +141,7 @@ class TimeSynchronizer:
             raise
         except Exception:
             self.logger().error("Error getting server time.", exc_info=True)
+            raise
 
     async def update_server_time_if_not_initialized(
         self, time_provider: Awaitable[float]
