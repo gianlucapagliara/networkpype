@@ -1,6 +1,6 @@
 [project]
 name = "networkpype"
-version = "1.1.4"
+version = "1.1.5"
 description = "NetworkPype is a Python library for building efficient network communication pipelines, supporting both REST and WebSocket protocols with built-in rate limiting and time synchronization."
 authors = [{ name = "Gianluca Pagliara", email = "pagliara.gianluca@gmail.com" }]
 readme = "README.md"
